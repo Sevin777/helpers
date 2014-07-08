@@ -1,3 +1,7 @@
+/*
+ * helpers.js version 1.0 - Morgan Yarbrough
+ */
+
 /**
 * Logs Debug information to console;
 * Call from any function and simply pass arguments;
@@ -148,7 +152,6 @@ function logO(object, str_Description, NoTrace) {
     }
     catch (ex) { setTimeout(function () { throw (ex); }, 0); }
 }
-
 
 /**
  * Logs passed arugments (pass as many as desired) intelligently including the type of object and a mini stack trace
