@@ -234,6 +234,15 @@ function log() {
                     msg += 'Type: ' + type + '\n' + 'value: ' + '(Next Logged Object)';
                     logObject = true;
                 }
+                else if (type === 'Error') {
+                    msg += 'Type: ' + type ;
+                    try{
+                        msg +='\n stack: \t ' + a.stack.toString();//note that stack contains the message
+                    }
+                    catch(ex){
+                        logObject=true;//failed to get stack   
+                    }
+                }
                 else { //any other type is a class
                     msg += 'Type: ' + type + '\n' + 'value: ' + '(Next Logged Object)';
                     logObject = true;
