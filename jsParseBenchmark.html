@@ -29,7 +29,7 @@
                 for (var i = 0; i < PE.length; i++) {
                     var e = PE[i];
                     totalNetworkDuration += e.duration;
-                    var name = e.name.replaceAll(baseURL, '');
+                    var name = e.name.replace(baseURL, '');
                     newNames.push(encodeURIComponent(name));
                     tableRows += "<tr><td>" + e.duration.toFixed(2) + " ms" + "</td><td>" + e.initiatorType + "</td><td>" + name; + "</td></tr>";
                 }
@@ -100,7 +100,7 @@
             name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
             var regexS = "[\\?&]" + name + "=([^&#]*)";
             var regex = new RegExp(regexS, 'i');
-            if (_.empty(search)) {
+            if (!search) {
                 search = window.location.search;
             }
             var results = regex.exec(search);
