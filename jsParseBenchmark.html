@@ -22,8 +22,17 @@
                 var tableRows = "<thead><tr><th style='width:100px; text-align:left;'>networks ms</th><th style='width:50px;text-align:left;'>type</th><th style='text-align:left;'>name</th></tr></thead><tbody>";
                 window.l_Names = encodeURIComponent(getQueryStringParameterByName('names'));
                 window.l_loadCount = parseInt(getQueryStringParameterByName('loadCount'), 10);
-                window.l_avgTime = parseFloat(getQueryStringParameterByName('avgTime'));
+                if(isNaN(l_loadCount)){
+                    l_loadCount = 0;
+                }
+                window.l_totalTime = parseFloat(getQueryStringParameterByName('totalTime'));
+                if(isNaN(l_totalTime)){
+                    l_totalTime = 0;
+                }
                 window.l_autoRetry = parseInt(getQueryStringParameterByName('autoRetry'), 10);
+                if(isNaN(l_autoRetry)){
+                    l_autoRetry = -1;
+                }
                 window.totalNetworkDuration = 0;
                 window.newNames = [];
                 for (var i = 0; i < PE.length; i++) {
@@ -40,23 +49,21 @@
                 }
                 window.l_NamesNew = newNames.sort().join(",");
                 if (l_Names == l_NamesNew) { //loaded same, update numbers
-                    s += "<span style='width:110px; display:inline-block;'>Test Count: </span>" + l_loadCount;
-                    s += "<br/>" + "<span style='width:110px; display:inline-block;'>Average Time:</span>" + l_avgTime+" ms";
+                    var avgTime =  parseInt(l_totalTime/l_loadCount,10);
                     if (goodTrial) {
                         //add current results to total trials
-                        var diff = parseInt(scriptParseTime - l_avgTime, 10);
-                        s += "<br/>" + "<span style='width:110px; display:inline-block;'>New Time Diff:</span> <span style='font-weight:bold; color:" + (diff > 0 ? "red" : "green") + "'>" + diff + " ms</span>";
-                        l_avgTime = (l_loadCount * l_avgTime + scriptParseTime) / (l_loadCount + 1);
+                        var diff = parseInt(scriptParseTime -avgTime, 10);
+                        s += "<span style='width:110px; display:inline-block;'>New Time Diff:</span> <span style='font-weight:bold; color:" + (diff > 0 ? "red" : "green") + "'>" + diff + " ms</span>";
+                        l_totalTime += parseInt(scriptParseTime);
                         l_loadCount++; //increment
                     }
-                    else {
-                        //leave querystring params alone and they will be passed the same to next trial
-                    }
+                    s += "<br/><span style='width:110px; display:inline-block;'>Average Time:</span><span style='font-size:30px; font-weight:bold; color:#2B64A7'>" +avgTime+" ms</span>";
+                    s += "<br/><span style='width:110px; display:inline-block;'>Test Count: </span>" + l_loadCount;
                 }
                 else { //new names
                     if (goodTrial) {
                         l_loadCount = 1;
-                        l_avgTime = scriptParseTime;
+                        l_totalTime = scriptParseTime;
                         l_Names = l_NamesNew;
                     }
                 }
@@ -83,17 +90,15 @@
         }
         //re run
         function _BenchmarkAgain(isAutoRetry) {
-        
             if (isAutoRetry === true && window.hasOwnProperty('stopAutoRetry')) {
                 return;
             }
             var url = document.location.pathname + "?";
             url = URL_AddOrUpdateQueryStringParam(url, 'names', l_NamesNew);
             url = URL_AddOrUpdateQueryStringParam(url, 'loadCount', l_loadCount);
-            url = URL_AddOrUpdateQueryStringParam(url, 'avgTime', scriptParseTime);
+            url = URL_AddOrUpdateQueryStringParam(url, 'totalTime', l_totalTime);
             url = URL_AddOrUpdateQueryStringParam(url, 'autoRetry', parseInt(document.getElementById('autoRetryInput').value, 10));
             window.location.href = url;
-        
         }
         //querystring param from name
         function getQueryStringParameterByName(name, search) {
