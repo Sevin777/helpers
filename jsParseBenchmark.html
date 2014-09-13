@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <script type="text/javascript">
+            window.StartTime= performance.now();
+        </script>
+        <title>JS Parse Test</title>
+        <!-- place one or more script tags here (1 at at ime is best) to test how long it takes to PARSE the script once its loaded -->
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    </head>
+    <body style="padding:20px; 40px;">
+        <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            window.scriptParseTime = parseInt((performance.now() - StartTime), 10);
+            setTimeout(function() {
+                var s = "<span style='font-size:larger; color:green; font-weight:bold;'>" + scriptParseTime + " milliseconds </span>  to load current scripts in page <hr/>";
+        
+                //show loaded scripts
+                var PE = performance.getEntries();
+                var baseURL = document.location.protocol + "//" + document.location.host;
+                var tableRows = "<thead><tr><th style='width:100px; text-align:left;'>networks ms</th><th style='width:50px;text-align:left;'>type</th><th style='text-align:left;'>name</th></tr></thead><tbody>";
+                window.l_Names = encodeURIComponent(getQueryStringParameterByName('names'));
+                window.l_loadCount = parseInt(getQueryStringParameterByName('loadCount'), 10);
+                window.l_avgTime = parseFloat(getQueryStringParameterByName('avgTime'));
+                window.l_autoRetry = parseInt(getQueryStringParameterByName('autoRetry'), 10);
+                window.totalNetworkDuration = 0;
+                window.newNames = [];
+                for (var i = 0; i < PE.length; i++) {
+                    var e = PE[i];
+                    totalNetworkDuration += e.duration;
+                    var name = e.name.replaceAll(baseURL, '');
+                    newNames.push(encodeURIComponent(name));
+                    tableRows += "<tr><td>" + e.duration.toFixed(2) + " ms" + "</td><td>" + e.initiatorType + "</td><td>" + name; + "</td></tr>";
+                }
+                window.goodTrial = true;
+                if (totalNetworkDuration > 0) {
+                    goodTrial = false;
+                    s += "<div style='color:red; font-weight:bold;'>Bad Trial- files not fully loaded from cache. Network duration: " + totalNetworkDuration.toFixed(0) + "ms  (this trial wont be included in results)</div>";
+                }
+                window.l_NamesNew = newNames.sort().join(",");
+                if (l_Names == l_NamesNew) { //loaded same, update numbers
+                    s += "<span style='width:110px; display:inline-block;'>Test Count: </span>" + l_loadCount;
+                    s += "<br/>" + "<span style='width:110px; display:inline-block;'>Average Time:</span>" + l_avgTime+" ms";
+                    if (goodTrial) {
+                        //add current results to total trials
+                        var diff = parseInt(scriptParseTime - l_avgTime, 10);
+                        s += "<br/>" + "<span style='width:110px; display:inline-block;'>New Time Diff:</span> <span style='font-weight:bold; color:" + (diff > 0 ? "red" : "green") + "'>" + diff + " ms</span>";
+                        l_avgTime = (l_loadCount * l_avgTime + scriptParseTime) / (l_loadCount + 1);
+                        l_loadCount++; //increment
+                    }
+                    else {
+                        //leave querystring params alone and they will be passed the same to next trial
+                    }
+                }
+                else { //new names
+                    if (goodTrial) {
+                        l_loadCount = 1;
+                        l_avgTime = scriptParseTime;
+                        l_Names = l_NamesNew;
+                    }
+                }
+                s += "<hr/><table style='width:100%;'>" + tableRows + "</tbody></table>";
+        
+                //auto retry
+                if (l_autoRetry > 0) {
+                    document.getElementById('autoRetryInput').value = l_autoRetry;
+                    s = "<div id='autoRetryWarn' style='margin:5px 0px; font-style:italic; color:magenta;'>Auto retrying in " + l_autoRetry + " milliseconds... <a href='javascript:void(0);' onclick='cancelAutoRetry();'>click here to cancel</a></div>" + s;
+                    setTimeout(function() {
+                        _BenchmarkAgain(true);
+                    }, l_autoRetry);
+                }
+                document.getElementById('output').innerHTML = s;
+            }, 0);
+        });
+        //stop auto retry
+        function cancelAutoRetry() {
+            window.stopAutoRetry = true;
+            try {
+                document.getElementById('autoRetryWarn').innerHTML = '';
+            }
+            catch (ex) {}
+        }
+        //re run
+        function _BenchmarkAgain(isAutoRetry) {
+        
+            if (isAutoRetry === true && window.hasOwnProperty('stopAutoRetry')) {
+                return;
+            }
+            var url = document.location.pathname + "?";
+            url = URL_AddOrUpdateQueryStringParam(url, 'names', l_NamesNew);
+            url = URL_AddOrUpdateQueryStringParam(url, 'loadCount', l_loadCount);
+            url = URL_AddOrUpdateQueryStringParam(url, 'avgTime', scriptParseTime);
+            url = URL_AddOrUpdateQueryStringParam(url, 'autoRetry', parseInt(document.getElementById('autoRetryInput').value, 10));
+            window.location.href = url;
+        
+        }
+        //querystring param from name
+        function getQueryStringParameterByName(name, search) {
+            name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+            var regexS = "[\\?&]" + name + "=([^&#]*)";
+            var regex = new RegExp(regexS, 'i');
+            if (_.empty(search)) {
+                search = window.location.search;
+            }
+            var results = regex.exec(search);
+            if (results == null) return "";
+            else return decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+        //Adds or updates existing querystring parameter for url and returns url
+        function URL_AddOrUpdateQueryStringParam(str_Url, str_ParamKey, str_ParamValue) {
+            str_Url = URL_RemoveQueryStringParam(str_Url, str_ParamKey); //remove existing
+            if (!str_ParamValue) { //passed value empty, returnhere
+                return str_Url;
+            }
+            if (str_Url.indexOf('?') === -1) { //this is first qs param
+                return str_Url + '?' + str_ParamKey + '=' + str_ParamValue;
+            }
+            return str_Url + '&' + str_ParamKey + '=' + str_ParamValue;
+        }
+        // Removes a single querystring param from a URL;
+        function URL_RemoveQueryStringParam(str_Url, str_ParamToRemove) {
+            var urlparts = str_Url.split('?'); //  # prefer to use l.search if you have a location/link object
+            if (urlparts.length >= 2) {
+                var prefix = encodeURIComponent(str_ParamToRemove) + '=';
+                var pars = urlparts[1].split(/[&;]/g);
+                for (var i = pars.length; i-- > 0;) //    # reverse iteration as may be destructive
+                if (pars[i].toLowerCase().lastIndexOf(prefix.toLowerCase(), 0) !== -1) // # idiom for string.startsWith
+                pars.splice(i, 1);
+                str_Url = urlparts[0] + '?' + pars.join('&');
+            }
+            return str_Url;
+        }
+        </script>
+        <a href="javascript:void(0);" onclick="_BenchmarkAgain();">Reload from cache</a> <span style='padding-left:50px; display:inline-block;'> Auto Retry MS:  <input id='autoRetryInput' type='text' maxlength='4' value='-1' style='width:50px'></span>
+        <br/><br/>
+        <div id="output"></div>
+        <br/><br/>
+        <div style="color:grey;">
+            <ul>
+                <li>test loading this without any scripts and the time should be very close to 0ms</li>
+                <li>click the reload from cache link to reload from cache</li>
+                <li>use a browser refresh to reload with checking server for newer versions (which is not what this is intended to test)</li>
+                <li>Place one or more script tags in the header to test how long it takes to parse the script (not network time!)</li>
+            </ul>
+        </div>
+    </body>
+</html>
