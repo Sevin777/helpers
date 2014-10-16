@@ -1,5 +1,5 @@
 /*
- * helpers.js version 1.0 - Morgan Yarbrough
+ * helpers.js version 1.1 - Morgan Yarbrough
  */
 
 /**
@@ -37,7 +37,7 @@ function DBG(a, logParams, NoTrace) {
                 r += "Fn Name: " + a.callee.name;
             }
             else {
-                r += "Fn Name: undefined" ;
+                r += "Fn Name: undefined";
             }
             if (a.callee.caller) {
                 r += brk;
@@ -99,7 +99,7 @@ function DBG(a, logParams, NoTrace) {
                 r += "\n Ran into error trying to print stack: " + ex;
             }
         }
-        console.log(r+"\n\n");
+        console.log(r + "\n\n");
     }
     catch (ex) {
         console.log('DBG called and ran into error:', ex);
@@ -154,20 +154,26 @@ function logO(object, str_Description, NoTrace) {
 }
 
 /**
- * Logs passed arugments (pass as many as desired) intelligently including the type of object and a mini stack trace
+ * Logs passed arugments (pass as many as desired) intelligently including the type of object and a mini stack trace;
+ * Automatically logs stack of error (but doesnt throw error);
  * @param {object} [options] - (must be first argument)
  * @param {bool} [options.stack=true] - determines if stack trace is logged
  * @param {bool} [options.time=true] - determines if time logged
  * @param {bool} [options.vars=true] - determines if object should be set to global variable names
  */
 function log() {
+    if(!window.hasOwnProperty('consoleSupportsCSS')){
+        //https://developer.chrome.com/devtools/docs/console (also supported by firebux but dont care as i dont use it)
+        window.consoleSupportsCSS =new RegExp('chrome','i').test(navigator.userAgent);
+    }
     //check if options passed as first arg
     var options = { 'stack': true, 'time': true, 'vars': true };
     var firstLog = 0;
+    var noStack=false;
     var firstArg = arguments[0];
-    if(arguments.length>1){
+    if (arguments.length > 1) {
         if (firstArg && (firstArg.hasOwnProperty('stack') || firstArg.hasOwnProperty('time') || firstArg.hasOwnProperty('vars'))) {
-            try{
+            try {
                 if (firstArg.constructor.name !== 'Error') {
                     firstLog = 1;
                     if (firstArg.hasOwnProperty('stack')) {
@@ -179,10 +185,10 @@ function log() {
                     if (firstArg.hasOwnProperty('vars')) {
                         options['vars'] = firstArg['vars'];
                     }
-            
+
                 }
             }
-            catch(ex){}
+            catch (ex) { }
         }
     }
     if (window.logOtempCount === undefined) {
@@ -218,6 +224,7 @@ function log() {
         var logObject = false;
         var a = arguments[i];
         var type = '';
+        var css ='';
         try {
             if (a === undefined) {
                 type = " (undefined) ";
@@ -234,13 +241,19 @@ function log() {
                     msg += 'Type: ' + type + '\n' + 'value: ' + '(Next Logged Object)';
                     logObject = true;
                 }
-                else if (type === 'Error') {
-                    msg += 'Type: ' + type ;
-                    try{
-                        msg +='\n stack: \t ' + a.stack.toString();//note that stack contains the message
+                else if (type.indexOf('Error') !== -1 && a.hasOwnProperty('stack')) {
+                    //catches all error types: TypeError|EvalError|InternalError|RangeError|SyntaxError|URIError
+                    msg += 'Type:  ' + type;
+                    try {
+                        msg += '\nStack: ' + a.stack.toString();//note that stack contains the message
+                        noStack=true;
+                        if(consoleSupportsCSS){
+                            css = 'color:red;';
+                        }
                     }
-                    catch(ex){
-                        logObject=true;//failed to get stack   
+                    catch (ex) {
+                        logObject = true;//failed to get stack
+                        css='';
                     }
                 }
                 else { //any other type is a class
@@ -273,21 +286,32 @@ function log() {
                 if (logOtempCount > 99) { logOtempCount = 1; }//max of 99 temp vars
                 globalVarName = 'tmp' + logOtempCount;
                 window[globalVarName] = a;
-                globalVarName= '\t window.' + globalVarName + '=\n';//for string below
+                globalVarName = '\t window.' + globalVarName + '=\n';//for string below
             }
             if (i === firstLog) {
                 console.log('\n' + time + stack, msg + globalVarName, a);
             }
             else {
-                console.log(msg +globalVarName, a);
+                console.log(msg + globalVarName, a);
             }
         }
         else {
             if (i === firstLog) {
-                console.log('\n'+time + stack, msg);
+                if(css){
+                    console.log('\n' + time + noStack? '': stack);
+                    console.log('%c'+msg,css);
+                }
+                else{
+                    console.log('\n' + time + noStack ? '' : stack, msg);
+                }
             }
             else {
-                console.log(msg);
+                if(css){
+                    console.log('%c'+msg,css);
+                }
+                else{
+                    console.log(msg);
+                }
             }
         }
     }
@@ -298,7 +322,7 @@ function log() {
  */
 function getTime() {
     var D = new Date();
-    return ((D.getHours() < 10) ? "0" : "") + D.getHours() + ":" + ((D.getMinutes() < 10) ? "0" : "") + D.getMinutes() + ":" + ((D.getSeconds() < 10) ? "0" : "") + D.getSeconds() +":" + (D.getMilliseconds() < 10 ? "0" : "") + D.getMilliseconds();
+    return ((D.getHours() < 10) ? "0" : "") + D.getHours() + ":" + ((D.getMinutes() < 10) ? "0" : "") + D.getMinutes() + ":" + ((D.getSeconds() < 10) ? "0" : "") + D.getSeconds() + ":" + (D.getMilliseconds() < 10 ? "0" : "") + D.getMilliseconds();
 }
 
 /**
@@ -322,5 +346,5 @@ function logSW(date_SW, str_Msg, bool_UseMS) {
         }
         log(s + str_Msg);
     }
-    catch (ex) { log('LogSW error:',ex); }
+    catch (ex) { log('LogSW error:', ex); }
 }

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <script type="text/javascript">
-            window.StartTime= performance.now();
+            
         </script>
         <title>JS Parse Test</title>
         <!-- place one or more script tags here (1 at at ime is best) to test how long it takes to PARSE the script once its loaded -->
@@ -12,6 +12,9 @@
     <body style="padding:20px; 40px;">
         <script type="text/javascript">
         document.addEventListener("DOMContentLoaded", function() {
+            //see: https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#dom-window-performance
+            window.StartTime = performance.timing.domLoading;//start of DOM loading after all connections are done
+            console.log('dom complete minus now:' +performance.timing.domComplete - performance.now());
             window.scriptParseTime = parseInt((performance.now() - StartTime), 10);
             setTimeout(function() {
                 var s = "<span style='font-size:larger; color:green; font-weight:bold;'>" + scriptParseTime + " milliseconds </span>  to load current scripts in page <hr/>";
