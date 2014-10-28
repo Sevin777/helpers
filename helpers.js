@@ -1,5 +1,5 @@
 /*
- * helpers.js version 1.5 - Morgan Yarbrough
+ * helpers.js version 1.6 - Morgan Yarbrough
  */
 
 /**
@@ -229,7 +229,7 @@ function log() {
     if (window.logOtempCount === undefined) {
         window.logOtempCount = 0;
     }
-    if (advancedConsole && args.length > 1) {
+    if (advancedConsole) {
         if (!window.hasOwnProperty('logOGroup')) {
             window.logOGroup = 0;
         }
@@ -237,7 +237,7 @@ function log() {
         console.group('log# ' + logOGroup);
     }
     //css for timestamp and stack trace
-    var headerCss = advancedConsole ? 'font-style:italic; color:grey;' : '';
+    var headerCss = advancedConsole ? 'font-style:italic; color:grey; font-size:smaller;' : '';
     //css for logging object message
     var logObjectCss = advancedConsole ? 'color:#07c; font-size:smaller' : '';
     //#endregion
@@ -313,7 +313,7 @@ function log() {
                     msg += a;
                 }
                 else if (type === 'Array' || type === 'Function') {
-                    msg += 'Type: ' + type + '\n' + 'value: ' + '(Next Logged Object)';
+                    msg += 'Type: ' + type + '; \t' + 'Value: ' + '(Next Logged Object)';
                     logObject = true;
                     css = logObjectCss;
                 }
@@ -322,7 +322,7 @@ function log() {
                     msg += 'Type:  ' + type;
                     try {
                         if (arguments.length === 0) {
-                            msg = '\StackTrace Only: ' + a.stack.toString(); //clear type, this is a stack only because no args were passed
+                            msg = 'StackTrace Only: ' + a.stack.toString(); //clear type, this is a stack only because no args were passed
                         }
                         else {
                             msg += '\nStack: ' + a.stack.toString(); //note that stack contains the message
@@ -340,7 +340,7 @@ function log() {
                     }
                 }
                 else { //any other type is a class
-                    msg += 'Type: ' + type + '\n' + 'value: ' + '(Next Logged Object)';
+                    msg += 'Type: ' + type + '; \t' + 'Value: ' + '(Next Logged Object)';
                     logObject = true;
                     css = logObjectCss;
                 }
@@ -379,14 +379,14 @@ function log() {
                 }
             }
             if (i === firstLog) {
-                if (css) {
-                    console.log('%c' + '\n' + time + stack, headerCss);
+                if (css) {//object has extra css
+                    console.log('%c' + time + stack, headerCss);
                     console.log('%c' + msg + globalVarName, css);
                     console.log(a);
                 }
-                else {
+                else {//no object css
                     if (headerCss) {
-                        console.log('%c' + '\n' + time + stack, headerCss);
+                        console.log('%c' + time + stack, headerCss);
                         console.log(msg + globalVarName, a);
                     }
                     else {
@@ -394,7 +394,7 @@ function log() {
                     }
                 }
             }
-            else {
+            else {//not firt log
                 if (css) {
                     console.log('%c' + msg + globalVarName, css);
                     console.log(a);
@@ -406,13 +406,13 @@ function log() {
         }
         else {
             if (i === firstLog) {
-                if (css) {
-                    console.log('%c' + '\n' + time + stack, headerCss);
+                if (css) {//object has extra css
+                    console.log('%c' +  time + stack, headerCss);
                     console.log('%c' + msg, css);
                 }
-                else {
+                else {//no object css
                     if (headerCss) {
-                        console.log('%c' + '\n' + time + stack, headerCss);
+                        console.log('%c' +  time + stack, headerCss);
                         console.log(msg);
                     }
                     else {
@@ -433,7 +433,7 @@ function log() {
     //#endregion
 
 
-    if (advancedConsole && args.length > 1) {
+    if (advancedConsole) {
         console.groupEnd('log# ' + logOGroup);
     }
 }
