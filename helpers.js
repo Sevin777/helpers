@@ -1,5 +1,5 @@
 /*
- * helpers.js version 1.6 - Morgan Yarbrough
+ * helpers.js version 1.7 - Morgan Yarbrough
  */
 
 /**
@@ -186,6 +186,11 @@ function log() {
     var args = arguments || [];
     try {
         if (args.length === 0) {
+            if(typeof console.trace == 'function'){
+                //browser suports console.trace, use this instead of custom stack
+                console.trace('(log trace called)');
+                return;
+            }
             args = [];
             args.push(new Error('stack only (not an error)'));
         }
